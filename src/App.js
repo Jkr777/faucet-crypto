@@ -16,9 +16,9 @@ function App() {
   const [account, setAccount] = useState(null);
   const [shouldReload, reload] = useState(false);
 
-  function reloadEffect() {
+  const reloadEffect = useCallback(function() {
     reload(!shouldReload); 
-  }
+  }, [shouldReload]);
 
   async function loadProvider() {
     const provider = await detectEtherumProvider();
@@ -34,19 +34,8 @@ function App() {
       alert("Please, install Metamask");
     }
   }
- 
-  async function getAccount() {
-    const accounts = await web3Api.web3.eth.getAccounts();
-    setAccount(accounts[0]);
-  }
 
-  async function loadBalance() {
-    const { contract, web3 } = web3Api;
-    const balance = await web3.eth.getBalance(contract.address);
-    setBalance(web3.utils.fromWei(balance, 'ether')); 
-  }
-
-  const addFunds = useCallback(async () => {
+  const addFunds = useCallback(async function() {
     const { contract, web3 } = web3Api;
 
     await contract.addFunds({
@@ -55,7 +44,18 @@ function App() {
     }) 
 
     reloadEffect();
-  }, [web3Api, account]);
+  }, [web3Api, account, reloadEffect]);
+
+  const withdraw = useCallback(async function() {
+    const { contract, web3 } = web3Api;
+    const withdrawAmount = web3.utils.toWei("0.1", "ether");
+
+    await contract.withdraw(withdrawAmount, {
+      from: account
+    }) 
+
+    reloadEffect();
+  }, [web3Api, account, reloadEffect]);
 
   function handleConnect() {
     const { provider } = web3Api;
@@ -67,10 +67,21 @@ function App() {
   }, [])   
 
   useEffect(() => {
+    async function loadBalance() {
+      const { contract, web3 } = web3Api;
+      const balance = await web3.eth.getBalance(contract.address);
+      setBalance(web3.utils.fromWei(balance, 'ether')); 
+    }
+  
     web3Api.contract && loadBalance();
   }, [web3Api, shouldReload]);
   
-  useEffect(() => {
+  useEffect(() => {   
+    async function getAccount() {
+      const accounts = await web3Api.web3.eth.getAccounts();
+      setAccount(accounts[0]);
+    }
+
     web3Api.web3 && getAccount(); 
   }, [web3Api.web3]) 
 
@@ -85,7 +96,7 @@ function App() {
         <span>Current Balance: { balance } ETH</span>
       </div>
       <button onClick={addFunds}>Donate 1 ETH</button>
-      <button>Withdraw</button>
+      <button onClick={withdraw}>Withdraw</button>
     </div>
   );
 }
