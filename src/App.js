@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Web3 from "web3";
 import { loadContract } from "./utils/load-contract";  
 import Header from "./components/header";
@@ -14,6 +14,11 @@ function App() {
 
   const [balance, setBalance] = useState(null);
   const [account, setAccount] = useState(null);
+  const [shouldReload, reload] = useState(false);
+
+  function reloadEffect() {
+    reload(!shouldReload); 
+  }
 
   async function loadProvider() {
     const provider = await detectEtherumProvider();
@@ -22,7 +27,7 @@ function App() {
     if(provider) {
       setWeb3Api({
         web3: new Web3(provider),
-        provider: true,
+        provider,
         contract
       });
     } else {
@@ -38,11 +43,23 @@ function App() {
   async function loadBalance() {
     const { contract, web3 } = web3Api;
     const balance = await web3.eth.getBalance(contract.address);
-    setBalance(balance); 
+    setBalance(web3.utils.fromWei(balance, 'ether')); 
   }
 
+  const addFunds = useCallback(async () => {
+    const { contract, web3 } = web3Api;
+
+    await contract.addFunds({
+      from: account,
+      value: web3.utils.toWei("1", "ether")
+    }) 
+
+    reloadEffect();
+  }, [web3Api, account]);
+
   function handleConnect() {
-    web3Api.provider.request({ method: "eth_requestAccounts" });
+    const { provider } = web3Api;
+    provider.request({ method: "eth_requestAccounts" });
   }
 
   useEffect(() => {
@@ -51,7 +68,7 @@ function App() {
 
   useEffect(() => {
     web3Api.contract && loadBalance();
-  }, [web3Api]);
+  }, [web3Api, shouldReload]);
   
   useEffect(() => {
     web3Api.web3 && getAccount(); 
@@ -67,7 +84,7 @@ function App() {
       <div>
         <span>Current Balance: { balance } ETH</span>
       </div>
-      <button>Donate</button>
+      <button onClick={addFunds}>Donate 1 ETH</button>
       <button>Withdraw</button>
     </div>
   );
