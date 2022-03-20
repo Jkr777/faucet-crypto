@@ -1,0 +1,85 @@
+.container {
+  width: 50%;
+  margin: 20% auto;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.container__account {
+  display: flex;
+  align-items: center;
+  margin-bottom: .5rem;
+}
+
+.container__account__title {
+  font-size: 2.4rem;
+  letter-spacing: 0.1rem;
+}
+
+.container__account__address {
+  font-size: 2.4rem;
+  font-weight: bold;
+}
+
+.container__account__info {
+  margin-left: 1rem;
+}
+
+.btn {
+  font-weight: bold;
+  border: none;
+  padding: 1rem 0;
+  cursor: pointer;
+  border-radius: 0.5rem;
+  width: 15rem;
+  transition: all 0.2s;
+}
+
+.btn--wallet {
+  background-color: #F1C232;
+  color: #181305;
+}
+
+.btn--wallet:hover {
+  background-color: #f9e6ad;
+}
+
+.container__balance {
+  letter-spacing: 0.1rem;
+  margin-bottom: .5rem;
+}
+
+.container__balance__val {
+  font-size: 2.4rem;
+  color: #941327;
+  font-weight: bold;
+}
+
+.btn--donate {
+  background-color:#0034A3;
+  color: #ccd6ec;
+  margin-bottom: 0.5rem;
+}
+
+.btn--withdraw {
+  background-color:#ccd6ec;
+  color: #0034A3;
+}
+
+.btn--donate:hover {
+  background-color:#ccd6ec;
+  color: #0034A3;
+}
+
+.btn--withdraw:hover {
+  background-color:#fcfcfe;
+  color: #0034A3;
+}
+
+.btn--donate:disabled,
+.btn--withdraw:disabled {
+  background-color: #C6E9FD;
+  color: #8aa3b1;
+}

@@ -1,13 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
 import Web3 from "web3";
 import { loadContract } from "./utils/load-contract";  
-import Header from "./components/header";
 import detectEtherumProvider from '@metamask/detect-provider';
 import "./App.css";
 
 function App() {
   const [web3Api, setWeb3Api] = useState({
     provider: null,
+    isProviderLoaded: false,
     web3: null,
     contract: null
   }); 
@@ -19,21 +19,6 @@ function App() {
   const reloadEffect = useCallback(function() {
     reload(!shouldReload); 
   }, [shouldReload]);
-
-  async function loadProvider() {
-    const provider = await detectEtherumProvider();
-    const contract = await loadContract("Faucet", provider); 
-
-    if(provider) {
-      setWeb3Api({
-        web3: new Web3(provider),
-        provider,
-        contract
-      });
-    } else {
-      alert("Please, install Metamask");
-    }
-  }
 
   const addFunds = useCallback(async function() {
     const { contract, web3 } = web3Api;
@@ -62,7 +47,34 @@ function App() {
     provider.request({ method: "eth_requestAccounts" });
   }
 
+  function setAccountListener(provider) {
+    provider.on("accountsChanged", () => window.location.reload());
+    provider.on("chainChanged", () => window.location.reload());
+  }
+
   useEffect(() => {
+    async function loadProvider() {
+      const provider = await detectEtherumProvider();
+
+      if(provider) {
+        const contract = await loadContract("Faucet", provider); 
+        setAccountListener(provider);
+        setWeb3Api({
+          web3: new Web3(provider),
+          provider,
+          contract,
+          isProviderLoaded: true
+        });
+      } else {
+        setWeb3Api(api => ({
+          ...api,
+          isProviderLoaded: true
+        }));
+
+        alert("Please, install Metamask");
+      }
+    }
+
     loadProvider();
   }, [])   
 
@@ -85,19 +97,22 @@ function App() {
     web3Api.web3 && getAccount(); 
   }, [web3Api.web3]) 
 
+  if(!web3Api.isProviderLoaded) {
+    return <span  className="container">No wallet detected! <a rel="noreferrer" target="_blank" href="https://docs.metamask.io">Install Metamask</a></span>
+  }
+
   return (
-    <div>
-      <Header /> 
-      <div>
-        <span>Account:</span> 
-        <div>{ account ? <span>{ account }</span> : <button onClick={handleConnect}>Connect Metamask</button> }</div>
+    <main className="container">
+      <div className="container__account">
+        <span className="container__account__title">Account:</span> 
+        <div className="container__account__info">{ account ? <span className="container__account__address">{ account }</span> : <button className="btn btn--wallet" onClick={handleConnect}>Connect Metamask</button> }</div>
       </div>
-      <div>
-        <span>Current Balance: { balance } ETH</span>
+      <div className="container__balance">
+        <span>Current Balance: <span className="container__balance__val">{ balance } ETH</span></span>
       </div>
-      <button onClick={addFunds}>Donate 1 ETH</button>
-      <button onClick={withdraw}>Withdraw</button>
-    </div>
+      <button disabled={!account} className="btn btn--donate" onClick={addFunds}>Donate 1 ETH</button>
+      <button disabled={!account} className="btn btn--withdraw" onClick={withdraw}>Withdraw</button>
+    </main>
   );
 }
 
